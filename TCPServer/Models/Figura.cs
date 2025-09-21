@@ -21,6 +21,7 @@ namespace TCPServer.Models
 
         public void Pomeraj(int pomeraj)
         {
+            TrenutnaPozicija += pomeraj;
             if(UdaljenostDoCilja - pomeraj < 0)
             {
                 UdaljenostDoCilja = 0;

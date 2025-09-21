@@ -66,6 +66,7 @@ namespace TCPServer
                     Console.WriteLine($"Igrac {igracTrenutni.Id} je bacio: {rezultat}");
 
                     string odgovorServera = "";
+                    bool preklapanjeSeDesilo = false; 
 
                     // Aktiviranje figure
                     if (!igracTrenutni.Figura.Aktivna)
@@ -77,10 +78,9 @@ namespace TCPServer
                             igracTrenutni.Figura.UdaljenostDoCilja = poljaTable;
                             odgovorServera = "Figura je aktivirana! Dobili ste dodatni potez jer ste dobili 6.";
                         }
-                        else                  
+                        else
                         {
                             odgovorServera = "Morate baciti 6 da biste izasli! Gubite potez.";
-                            igra.SledeciIgrac();
                         }
                     }
                     else // Figura je aktivna
@@ -89,38 +89,39 @@ namespace TCPServer
                         if (igracTrenutni.Figura.UdaljenostDoCilja < rezultat)
                         {
                             odgovorServera = $"Ne mozete da udjete u cilj. Potreban tacan broj. Trenutno vam je potrebno: {igracTrenutni.Figura.UdaljenostDoCilja}.";
-                            igra.SledeciIgrac();
                         }
                         else
                         {
                             igracTrenutni.Figura.Pomeraj(rezultat);
                             // Proveravamo da li je doslo do preklapanja figura 4. Zadatak
-                            bool figuraPreklopljena = false;
-
+                            
                             foreach (var drugiIgrac in igra.Igraci.Where(i => i.Id != igracTrenutni.Id))
                             {
                                 if (drugiIgrac.Figura.Aktivna && drugiIgrac.Figura.TrenutnaPozicija == igracTrenutni.Figura.TrenutnaPozicija)
                                 {
                                     drugiIgrac.Figura.Aktivna = false;
-                                    drugiIgrac.Figura.TrenutnaPozicija = -1;        // Vracamo ga na pocetak
+                                    drugiIgrac.Figura.TrenutnaPozicija = -1;     // Vracamo ga na pocetak
+                                    drugiIgrac.Figura.UdaljenostDoCilja = poljaTable;
+
                                     odgovorServera = $"Igrac {igracTrenutni.Id} je preklopio figuru igraca {drugiIgrac.Id}, koji je vracen u bazu!";
-                                    figuraPreklopljena = true;
+                                    preklapanjeSeDesilo = true;
                                     break;
                                 }
                             }
-                            if (!figuraPreklopljena)
+                            if (!preklapanjeSeDesilo)
                             {
                                 odgovorServera = $"Figura je pomerena. Ostalo Vam je do cilja: {igracTrenutni.Figura.UdaljenostDoCilja}";
-                            }
-                            if (rezultat != 6)
-                            {
-                                igra.SledeciIgrac();        // Prelazak na sledeceg igraca
                             }
                         }
                     }
 
+                    if (rezultat != 6)
+                    {
+                        igra.SledeciIgrac();    
+                    }
+ 
                     // Proveravamo kraj igre
-                    if (igracTrenutni.Figura.UdaljenostDoCilja == 0)
+                    if (igracTrenutni.Figura.Aktivna && igracTrenutni.Figura.UdaljenostDoCilja == 0)
                     {
                         igra.KrajIgre = true;
                         string porukaPobeda = $"Igrac {igracTrenutni.Id} je pobedio! Kraj igre.";
@@ -131,14 +132,8 @@ namespace TCPServer
                         break;
                     }
 
-                    // Poruka sa odgovorom
-                    foreach (var client in clients)
-                    {
-                        client.Send(Encoding.UTF8.GetBytes(odgovorServera));
-                    }
-
-                    // 8. Izvestaj svim klijentima
                     StringBuilder sb = new StringBuilder();
+
                     sb.AppendLine(" --- STANJE IGRE --- ");
                     foreach (var igrac in igra.Igraci)
                     {
@@ -147,10 +142,29 @@ namespace TCPServer
                         sb.AppendLine($"Pozicija: {igrac.Figura.TrenutnaPozicija}");
                         sb.AppendLine($"Udaljenost do cilja: {igrac.Figura.UdaljenostDoCilja}");
                     }
+                    sb.AppendLine("--------------------\n");
+
                     string izvestaj = sb.ToString();
                     foreach (var client in clients)
                     {
-                        client.Send(Encoding.UTF8.GetBytes(izvestaj));
+                        if (client == trenutniSocket)
+                        {
+                            // Detaljan izveštaj za trenutnog igrača
+                            StringBuilder detaljanIzvestaj = new StringBuilder();
+                            detaljanIzvestaj.AppendLine(odgovorServera);
+                            detaljanIzvestaj.AppendLine("---");
+                            detaljanIzvestaj.Append(izvestaj);
+                            client.Send(Encoding.UTF8.GetBytes(detaljanIzvestaj.ToString()));
+                        }
+                        else
+                        {
+                            // Opšti izveštaj za ostale igrače
+                            StringBuilder drugiIgraciIzvestaj = new StringBuilder();
+                            drugiIgraciIzvestaj.AppendLine("Potez je zavrsen.");
+                            drugiIgraciIzvestaj.AppendLine("---");
+                            drugiIgraciIzvestaj.Append(izvestaj);
+                            client.Send(Encoding.UTF8.GetBytes(drugiIgraciIzvestaj.ToString()));
+                        }
                     }
                 }
             }

@@ -19,21 +19,36 @@ namespace TCPClient
 
             Console.WriteLine("Klijent je spreman za povezivanje sa serverom...");
             Console.ReadKey();
-            clientSocket.Connect(serverEP);
-            Console.WriteLine("Povezani ste na server.");
-
+         
+            try
+            {
+                clientSocket.Connect(serverEP);
+                Console.WriteLine("Povezani ste na server.");
+            }
+            catch (SocketException ex)
+            {
+                Console.WriteLine($"Greška pri povezivanju sa serverom: {ex.Message}");
+                Console.ReadKey();
+                return;
+            }
 
             while (true)
             {
                 try
                 {
                     byte[] buffer = new byte[1024];
-                    int brBajtova = clientSocket.Receive(buffer);       
+                    int brBajtova = clientSocket.Receive(buffer);
+                    if (brBajtova == 0)
+                    {
+                        Console.WriteLine("Server je prekinuo konekciju.");
+                        break;
+                    }
+
                     string serverPoruka = Encoding.UTF8.GetString(buffer, 0, brBajtova);
-                    Console.WriteLine("SERVER:" + serverPoruka);
 
                     if (serverPoruka.Contains("Vas je red!"))
                     {
+                        Console.WriteLine("SERVER:" + serverPoruka);//ovo sam ja
                         Console.WriteLine("Pritisnite enter da biste bacili kockicu.");
                         Console.ReadKey();
 
@@ -46,13 +61,27 @@ namespace TCPClient
 
                         // Klient prima odgovor o ishodu poteza
                         brBajtova = clientSocket.Receive(buffer);
-                        string odgovorServera = Encoding.UTF8.GetString(buffer, 0, brBajtova);
-                        Console.WriteLine("SERVER: " + odgovorServera);
+                        string konacnaPoruka = Encoding.UTF8.GetString(buffer, 0, brBajtova); 
+                        
+                        string[] deloviPoruke = konacnaPoruka.Split(new string[] { "---" }, StringSplitOptions.None);
+  
+                        if (deloviPoruke.Length > 1)
+                        {
+                            string odgovorServera = deloviPoruke[0];
+                            string izvestaj = deloviPoruke[1];
 
-                        // Klient prima izvestaj o stanju igre
-                        brBajtova = clientSocket.Receive(buffer);
-                        string izvestaj = Encoding.UTF8.GetString(buffer, 0, brBajtova);
-                        Console.WriteLine("SERVER: " + izvestaj);
+                            Console.WriteLine(odgovorServera);
+                            Console.WriteLine(izvestaj);
+                        }
+                        else
+                        {
+                            // Ako nema separatora, ispiši celu poruku
+                            Console.WriteLine(konacnaPoruka);
+                        }
+                    } 
+                    else
+                    {
+                        Console.WriteLine(serverPoruka);
                     }
 
                 }
