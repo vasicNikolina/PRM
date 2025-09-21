@@ -30,57 +30,7 @@ namespace TCPServer.Models
         {
             TrenutniIgrac = (TrenutniIgrac + 1) % Igraci.Count;
         }
-        /*
-        public void ProveriZavrsetakIgre()
-        {
-            foreach(var igrac in Igraci)
-            {
-                bool sveSuFigureNaCilju = true; //pretpostavljamo
-
-                foreach (var figura in igrac.Figura)
-                {
-                    if(figura.UdaljenostDoCilja != 0)
-                    {
-                        sveSuFigureNaCilju = false;
-                        break;
-                    }
-                }
-                if (sveSuFigureNaCilju)
-                {
-                    KrajIgre = true;
-                    break;
-                }
-            }   
-        }*/
-
-        /*public void ProveriZavrsetakIgre()
-        {
-            foreach(var igrac in Igraci)
-            {
-                if(igrac.Figure.Count(f=> f.UdaljenostDoCilja == 0) == igrac.Figure.Count){
-                    KrajIgre = true;
-                    break;
-                }
-            }
-
-        }*/
 
     }
 }
 
-/*public Igra(int poljaTable)
-        {
-            if(poljaTable < 16 || poljaTable % 4 != 0)
-            {
-                throw new ArgumentException("Broj polja na tabli mora biti deljiv sa 4 i veci od 16!");
-            }
-            BrojPoljaTable = poljaTable;
-            Igraci = new List<Korisnik>();
-            TrenutniIgracIndex = 0;
-            KrajIgre = false;
-        }*/
-
-/*public void DodajIgraca(Korisnik igrac)
-        {
-            Igraci.Add(igrac);
-        }*/

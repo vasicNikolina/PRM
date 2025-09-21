@@ -29,9 +29,7 @@ namespace TCPServer.Models
             {
                 UdaljenostDoCilja -= pomeraj;
             }
-
         }
-
 
     }
 }

@@ -25,25 +25,40 @@ namespace TCPClient
 
             while (true)
             {
-                byte[] buffer = new byte[1024];
-                int brBajtova = clientSocket.Receive(buffer);       //ovde baci neku gresku
-                string serverPoruka = Encoding.UTF8.GetString(buffer, 0, brBajtova);
-                Console.WriteLine("SERVER:" + serverPoruka);
                 try
                 {
-                    Console.WriteLine("Pritisnite enter da biste bacili kockicu.");
-                    Console.ReadKey();
+                    byte[] buffer = new byte[1024];
+                    int brBajtova = clientSocket.Receive(buffer);       
+                    string serverPoruka = Encoding.UTF8.GetString(buffer, 0, brBajtova);
+                    Console.WriteLine("SERVER:" + serverPoruka);
 
-                    Random rnd = new Random();
-                    int rezultatKockice = rnd.Next(1, 7);
-                    Console.WriteLine($"Vas rezultat je:{rezultatKockice}\n");
-                    clientSocket.Send(Encoding.UTF8.GetBytes(rezultatKockice.ToString()));
+                    if (serverPoruka.Contains("Vas je red!"))
+                    {
+                        Console.WriteLine("Pritisnite enter da biste bacili kockicu.");
+                        Console.ReadKey();
 
+                        Random rnd = new Random();
+                        int rezultatKockice = rnd.Next(1, 7);
+                        Console.WriteLine($"Vas rezultat je:{rezultatKockice}\n");
+
+                        // Rezultat se salje serveru
+                        clientSocket.Send(Encoding.UTF8.GetBytes(rezultatKockice.ToString()));
+
+                        // Klient prima odgovor o ishodu poteza
+                        brBajtova = clientSocket.Receive(buffer);
+                        string odgovorServera = Encoding.UTF8.GetString(buffer, 0, brBajtova);
+                        Console.WriteLine("SERVER: " + odgovorServera);
+
+                        // Klient prima izvestaj o stanju igre
+                        brBajtova = clientSocket.Receive(buffer);
+                        string izvestaj = Encoding.UTF8.GetString(buffer, 0, brBajtova);
+                        Console.WriteLine("SERVER: " + izvestaj);
+                    }
 
                 }
                 catch (SocketException ex) 
                 {
-                    Console.WriteLine($"Doslo je do greske: {ex}");
+                    Console.WriteLine($"Doslo je do greske: {ex.Message}");
                     break;
                 }
                 

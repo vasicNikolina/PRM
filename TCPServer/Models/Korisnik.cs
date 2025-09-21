@@ -10,7 +10,6 @@ namespace TCPServer.Models
     {
         public int Id { get; set; }
         public string Ime { get; set; }
-        //public List<Figura> Figure { get; set; }
         public Figura Figura { get; set; }
         public int Start { get; set; }
         public int Cilj { get; set; }
@@ -21,11 +20,11 @@ namespace TCPServer.Models
             Ime = ime;
             Start = start;
             Cilj = cilj;
-            //Figure = new List<Figura>();
             Figura = new Figura();
         }
 
-        
-
     }
 }
+
+//public List<Figura> Figure { get; set; }
+//Figure = new List<Figura>();
